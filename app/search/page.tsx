@@ -1,24 +1,40 @@
+'use client'
+
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Movie, MovieResponse } from '@/types'
+import { Movie } from '@/types'
 
-async function getPopularMovies(): Promise<MovieResponse> {
-  const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}&language=pt-BR&page=1`)
-  if (!res.ok) {
-    throw new Error('Falha ao buscar dados')
+export default function SearchPage() {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Movie[]>([])
+
+  const searchMovies = async () => {
+    const res = await fetch(`/api/search?query=${encodeURIComponent(query)}`)
+    const data = await res.json()
+    setResults(data.results)
   }
-  return res.json()
-}
-
-export default async function Home() {
-  const data = await getPopularMovies()
-  const movies: Movie[] = data.results
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1 className="text-4xl font-bold mb-8">Filmes Populares</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-8">Buscar Filmes</h1>
+      <div className="mb-8">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="p-2 border border-gray-300 rounded mr-2"
+          placeholder="Digite o nome do filme..."
+        />
+        <button
+          onClick={searchMovies}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Buscar
+        </button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {movies.map((movie: Movie) => (
+        {results.map((movie) => (
           <div key={movie.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="relative w-full h-[300px]">
               {movie.poster_path ? (
@@ -46,6 +62,6 @@ export default async function Home() {
           </div>
         ))}
       </div>
-    </main>
+    </div>
   )
 }
